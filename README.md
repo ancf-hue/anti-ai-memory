@@ -1,3 +1,5 @@
+<img width="952" height="955" alt="P6IEhjQ" src="https://github.com/user-attachments/assets/acf87188-c27f-48ad-b60d-5cacc15c8d57" />
+
 #  Анти ИИ Память
 
 Игра на развитие памяти. Запомните порядок фигур и повторите его!
@@ -77,11 +79,9 @@ git commit -m "🎮 Первый релиз: Анти ИИ Память"
 # Название: anti-ai-memory
 # Описание: (выбери один из вариантов выше)
 
-# 7. Свяжи локальный репозиторий с удаленным
-git remote add origin https://github.com/ТВОЙ_НИК/anti-ai-memory.git
 
-# 8. Загрузи на GitHub
+# 7. Загрузи на GitHub
 git branch -M main
 git push -u origin main
 
-# 9. Включи GitHub Pages (Settings -> Pages -> Branch: main)
+# 8. Включи GitHub Pages (Settings -> Pages -> Branch: main)
