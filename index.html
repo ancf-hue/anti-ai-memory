@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Анти ИИ Память - 3D Фигуры</title>
+  <link rel="icon" type="image/x-icon" href="icon-512.ico">
+  <style>
+    :root {
+      --ball: #E53935;
+      --ball-glow: #ff6b6b;
+      --square: #43A047;
+      --square-glow: #6ecc6e;
+      --triangle: #1E88E5;
+      --triangle-glow: #5cb3ff;
+      --star: #FFD600;
+      --star-glow: #ffe66d;
+    }
+    
+    * {
+      box-sizing: border-box;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      margin: 0;
+      padding: 0;
+    }
+    
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      position: fixed;
+    }
+    
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
+    
+    #app {
+      width: 100%;
+      max-width: 430px;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* ========== ЗАСТАВКА 5 СЕКУНД (ИЗ АНТИ ИИ АВТОМОБИЛЬ) ========== */
+    .loading-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #0f1a24;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.5s ease;
+    }
+    .loading-screen.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .loading-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .loading-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+      transition: opacity 0.3s ease;
+      opacity: 1;
+    }
+    .loading-screen.hidden .loading-video {
+      opacity: 0;
+    }
+    .sound-toggle {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(0,0,0,0.5);
+      border: 2px solid rgba(255,255,255,0.5);
+      border-radius: 50%;
+      width: 56px;
+      height: 56px;
+      font-size: 28px;
+      cursor: pointer;
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+    .sound-toggle:active { transform: scale(0.9); }
+    /* ========== КОНЕЦ ЗАСТАВКИ ========== */
+    
+    /* СТАРТОВЫЙ ЭКРАН (1 страница) */
+    #start-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      gap: 20px;
+      padding: 20px;
+      background-image: url('bg-star-sky.jpg');
+      background-size: cover;
+      background-position: center;
+      z-index: 2;
+      overflow: hidden;
+    }
+    
+    #start-screen.hide {
+      display: none;
+    }
+    
+    #start-screen .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      pointer-events: none;
+    }
+    
+    .start-logo {
+      position: relative;
+      z-index: 1;
+      width: 100px;
+      height: 100px;
+      background-image: url('icon-512.ico');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      filter: drop-shadow(0 0 20px rgba(79, 195, 247, 0.5));
+      animation: logoFloat 2s ease-in-out infinite;
+    }
+    
+    @keyframes logoFloat {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    #start-screen h1 {
+      position: relative;
+      z-index: 1;
+      font-size: 1.6rem;
+      margin: 0;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+      color: white;
+    }
+    
+    #start-screen p {
+      position: relative;
+      z-index: 1;
+      text-shadow: 0 1px 5px rgba(0,0,0,0.8);
+      color: white;
+      font-size: 1rem;
+      margin: 0;
+    }
+    
+    .start-btn {
+      position: relative;
+      z-index: 1;
+      background: linear-gradient(135deg, #4fc3f7, #29b6f6);
+      color: #000;
+      border: none;
+      padding: 14px 40px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      border-radius: 40px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      transition: transform 0.1s;
+      margin-top: 10px;
+    }
+    
+    .start-btn:active {
+      transform: scale(0.96);
+    }
+    
+    /* ИГРОВОЙ ЭКРАН (2 страница) */
+    #game-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 12px;
+      background-image: url('bg-star-sky.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s;
+      z-index: 1;
+      overflow: hidden;
+    }
+    
+    #game-screen.show {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    #game-screen .overlay-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      pointer-events: none;
+      z-index: 0;
+    }
+    
+    #game-screen > * {
+      position: relative;
+      z-index: 1;
+    }
+    
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(8px);
+      padding: 10px 14px;
+      border-radius: 30px;
+      margin-bottom: 12px;
+    }
+    
+    .level-text {
+      color: white;
+      font-weight: bold;
+      text-shadow: 0 1px 2px black;
+      font-size: 0.9rem;
+      background: rgba(0,0,0,0.3);
+      padding: 6px 12px;
+      border-radius: 20px;
+    }
+    
+    .level-text b {
+      font-size: 1.2rem;
+      color: #ffd600;
+    }
+    
+    .game-logo {
+      width: 32px;
+      height: 32px;
+      background-image: url('icon-512.ico');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      filter: drop-shadow(0 0 8px rgba(79, 195, 247, 0.5));
+    }
+    
+    .stop-btn {
+      background: rgba(244, 67, 54, 0.9);
+      color: white;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 30px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 0.85rem;
+      backdrop-filter: blur(4px);
+    }
+    
+    .display-area {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(8px);
+      border-radius: 24px;
+      margin-bottom: 12px;
+      border: 1px solid rgba(255,255,255,0.1);
+      min-height: 0;
+    }
+    
+    .shape-preview {
+      width: 130px;
+      height: 130px;
+      opacity: 0;
+      transform: scale(0.5) rotateY(0deg);
+      transition: all 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+    }
+    
+    .shape-preview.show {
+      opacity: 1;
+      transform: scale(1.2) rotateY(360deg);
+    }
+    
+    @keyframes glowPulse {
+      0% { filter: drop-shadow(0 0 5px currentColor); }
+      50% { filter: drop-shadow(0 0 25px currentColor); }
+      100% { filter: drop-shadow(0 0 5px currentColor); }
+    }
+    
+    .shape-preview svg {
+      animation: glowPulse 0.8s ease-in-out;
+    }
+    
+    .hint-text {
+      position: absolute;
+      bottom: 12px;
+      font-size: 0.8rem;
+      text-align: center;
+      color: white;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+      background: rgba(0,0,0,0.5);
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+    
+    .video-feedback {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 20;
+      border-radius: 24px;
+    }
+    
+    .video-feedback.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: auto;
+      margin-bottom: 0;
+    }
+    
+    .shape-btn {
+      aspect-ratio: 1;
+      background: linear-gradient(145deg, rgba(20, 20, 35, 0.8), rgba(10, 10, 20, 0.8));
+      backdrop-filter: blur(8px);
+      border: none;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .shape-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 20px;
+      padding: 2px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0));
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+    
+    .shape-btn:active {
+      transform: scale(0.94);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    }
+    
+    .shape-btn:disabled {
+      opacity: 0.4;
+      transform: none;
+      cursor: default;
+    }
+    
+    .shape-btn svg {
+      width: 55%;
+      height: 55%;
+      transition: all 0.2s;
+    }
+    
+    .shape-btn:active svg {
+      transform: scale(0.9);
+    }
+    
+    .shape-btn[data-type="ball"] svg {
+      filter: drop-shadow(0 0 10px var(--ball-glow));
+    }
+    .shape-btn[data-type="square"] svg {
+      filter: drop-shadow(0 0 10px var(--square-glow));
+    }
+    .shape-btn[data-type="triangle"] svg {
+      filter: drop-shadow(0 0 10px var(--triangle-glow));
+    }
+    .shape-btn[data-type="star"] svg {
+      filter: drop-shadow(0 0 10px var(--star-glow));
+    }
+    
+    /* СТРАНИЦА ПОДДЕРЖКИ (3 страница) */
+    #support-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background-image: url('bg-star-sky.jpg');
+      background-size: cover;
+      background-position: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s;
+      z-index: 3;
+      overflow-y: auto;
+    }
+    
+    #support-screen.show {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .support-container {
+      flex: 1;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .support-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      pointer-events: none;
+      z-index: -1;
+    }
+    
+    .support-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    
+    .support-header h2 {
+      font-size: 1.8rem;
+      margin-bottom: 8px;
+      color: #ffd600;
+    }
+    
+    .support-header p {
+      color: white;
+      font-size: 0.9rem;
+    }
+    
+    .support-card {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      border-radius: 24px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .phone-number {
+      background: rgba(79, 195, 247, 0.2);
+      border-radius: 16px;
+      padding: 15px;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+    
+    .phone-number .number {
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: #4fc3f7;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+    
+    .copy-btn {
+      background: #4fc3f7;
+      color: #000;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: transform 0.1s;
+    }
+    
+    .copy-btn:active {
+      transform: scale(0.96);
+    }
+    
+    .info-text {
+      font-size: 0.8rem;
+      color: #ccc;
+      text-align: center;
+      margin-top: 10px;
+    }
+    
+    .heart {
+      font-size: 2rem;
+      text-align: center;
+      margin: 10px 0;
+    }
+    
+    .projects-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .project-link {
+      background: rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 12px;
+      text-decoration: none;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: background 0.2s;
+    }
+    
+    .project-link:active {
+      background: rgba(255,255,255,0.2);
+    }
+    
+    .project-icon {
+      font-size: 1.5rem;
+    }
+    
+    .project-info {
+      flex: 1;
+    }
+    
+    .project-name {
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+    
+    .project-desc {
+      font-size: 0.7rem;
+      opacity: 0.7;
+    }
+    
+    .back-btn {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 30px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 20px;
+      font-size: 1rem;
+      transition: transform 0.1s;
+    }
+    
+    .back-btn:active {
+      transform: scale(0.96);
+      background: rgba(255,255,255,0.3);
+    }
+    
+    .debug {
+      position: fixed;
+      bottom: 3px;
+      left: 3px;
+      font-size: 0.4rem;
+      color: rgba(255,255,255,0.2);
+      background: transparent;
+      padding: 2px 3px;
+      border-radius: 3px;
+      z-index: 100;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    
+    <!-- ========== ЗАСТАВКА 5 СЕКУНД (ИЗ АНТИ ИИ АВТОМОБИЛЬ) ========== -->
+    <div class="loading-screen" id="loadingScreen">
+      <button class="sound-toggle" id="soundBtn">🔇</button>
+      <img src="frame.jpg" alt="Заставка" class="loading-image" id="loadingImage">
+      <video src="cube.mp4" playsinline webkit-playsinline preload="auto" class="loading-video" id="loadingVideo"></video>
+    </div>
+    <!-- ========== КОНЕЦ ЗАСТАВКИ ========== -->
+
+    <!-- 1 СТРАНИЦА: СТАРТ -->
+    <div id="start-screen">
+      <div class="overlay"></div>
+      <div class="start-logo"></div>
+      <h1>Анти ИИ Память</h1>
+      <p>Запомните порядок фигур<br>и повторите его</p>
+      <button class="start-btn" id="btn-start">СТАРТ</button>
+    </div>
+    
+    <!-- 2 СТРАНИЦА: ИГРА -->
+    <div id="game-screen">
+      <div class="overlay-bg"></div>
+      
+      <header>
+        <span class="level-text">УРОВЕНЬ <b id="level-num">1</b></span>
+        <div class="game-logo"></div>
+        <button class="stop-btn" id="btn-stop">СТОП</button>
+      </header>
+      
+      <div class="display-area">
+        <div class="shape-preview" id="preview"></div>
+        <div class="hint-text" id="hint">Нажмите СТАРТ</div>
+        <video id="video-correct" class="video-feedback" src="video/correct.mp4"></video>
+        <video id="video-incorrect" class="video-feedback" src="video/incorrect.mp4"></video>
+      </div>
+      
+      <div class="controls">
+        <button class="shape-btn" data-type="ball" data-sound="audio/ball.mp3">
+          <svg viewBox="0 0 100 100">
+            <defs>
+              <radialGradient id="ballGradient" cx="35%" cy="35%">
+                <stop offset="0%" stop-color="#ff8a8a"/>
+                <stop offset="100%" stop-color="#c62828"/>
+              </radialGradient>
+            </defs>
+            <circle cx="50" cy="50" r="42" fill="url(#ballGradient)"/>
+            <ellipse cx="35" cy="35" rx="12" ry="8" fill="rgba(255,255,255,0.3)" transform="rotate(-30 35 35)"/>
+          </svg>
+        </button>
+        
+        <button class="shape-btn" data-type="square" data-sound="audio/square.mp3">
+          <svg viewBox="0 0 100 100">
+            <defs>
+              <linearGradient id="squareGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#81c784"/>
+                <stop offset="100%" stop-color="#2e7d32"/>
+              </linearGradient>
+            </defs>
+            <rect x="15" y="15" width="70" height="70" rx="12" fill="url(#squareGradient)"/>
+            <rect x="25" y="25" width="20" height="20" rx="4" fill="rgba(255,255,255,0.2)"/>
+          </svg>
+        </button>
+        
+        <button class="shape-btn" data-type="triangle" data-sound="audio/triangle.mp3">
+          <svg viewBox="0 0 100 100">
+            <defs>
+              <linearGradient id="triangleGradient" x1="0%" y1="100%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#1565c0"/>
+                <stop offset="100%" stop-color="#64b5f6"/>
+              </linearGradient>
+            </defs>
+            <polygon points="50,15 88,85 12,85" fill="url(#triangleGradient)"/>
+            <polygon points="50,35 70,75 30,75" fill="rgba(255,255,255,0.15)"/>
+          </svg>
+        </button>
+        
+        <button class="shape-btn" data-type="star" data-sound="audio/star.mp3">
+          <svg viewBox="0 0 100 100">
+            <defs>
+              <linearGradient id="starGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#fff176"/>
+                <stop offset="100%" stop-color="#f9a825"/>
+              </linearGradient>
+            </defs>
+            <polygon points="50,5 61,35 95,35 68,55 79,85 50,65 21,85 32,55 5,35 39,35" fill="url(#starGradient)"/>
+            <polygon points="50,20 56,40 78,40 60,54 66,74 50,60 34,74 40,54 22,40 44,40" fill="rgba(255,255,255,0.2)"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    
+    <!-- 3 СТРАНИЦА: ПОДДЕРЖКА -->
+    <div id="support-screen">
+      <div class="support-container">
+        <div class="support-header">
+          <h2>🤝 ПОДДЕРЖАТЬ ПРОЕКТ</h2>
+          <p>Приложение бесплатное. Было и останется.</p>
+          <p>Если проект помог вам или вашим близким — можете поддержать разработку добровольным переводом.</p>
+        </div>
+        
+        <div class="support-card">
+          <div class="phone-number">
+            <div class="number">📱 8-920-227-56-76</div>
+            <button class="copy-btn" id="copy-phone">📋 Копировать номер</button>
+            <div class="info-text">✅ Деньги придут мгновенно. Без комиссии. Безопасно.</div>
+          </div>
+          <div class="heart">❤️ Спасибо за поддержку!</div>
+        </div>
+        
+        <div class="support-card">
+          <div class="support-header" style="margin-bottom: 12px;">
+            <h3 style="font-size: 1.2rem;">🌟 ДРУГИЕ НАШИ ПРОЕКТЫ</h3>
+          </div>
+          <div class="projects-list">
+            <a class="project-link" href="https://anti-ai-shield.vercel.app/" target="_blank">
+              <span class="project-icon">🛡️</span>
+              <div class="project-info">
+                <div class="project-name">«Защита от телефонных мошенников»</div>
+              </div>
+            </a>
+            <a class="project-link" href="https://anti-bullying-app-one.vercel.app/" target="_blank">
+              <span class="project-icon">🏫</span>
+              <div class="project-info">
+                <div class="project-name">«Защита от Школьного буллинга»</div>
+              </div>
+            </a>
+            <a class="project-link" href="https://anti-ai-animals.vercel.app/" target="_blank">
+              <span class="project-icon">🐾</span>
+              <div class="project-info">
+                <div class="project-name">«Анти ИИ: Животные поют»</div>
+              </div>
+            </a>
+            <a class="project-link" href="https://anti-ai-stress.vercel.app/" target="_blank">
+              <span class="project-icon">🧘</span>
+              <div class="project-info">
+                <div class="project-name">«Анти-ИИ Стресс»</div>
+              </div>
+            </a>
+            <a class="project-link" href="https://anti-ai-barcode.vercel.app/" target="_blank">
+              <span class="project-icon">📱</span>
+              <div class="project-info">
+                <div class="project-name">«Анти ИИ Штрих-код»</div>
+              </div>
+            </a>
+            <a class="project-link" href="https://anti-ai-cosmos.vercel.app/" target="_blank">
+              <span class="project-icon">✨</span>
+              <div class="project-info">
+                <div class="project-name">«Анти ИИ Космос»</div>
+              </div>
+            </a>
+            <a class="project-link" href="https://anti-ai-auto.vercel.app/" target="_blank">
+              <span class="project-icon">🚗</span>
+              <div class="project-info">
+                <div class="project-name">«Анти ИИ Автомобиль»</div>
+              </div>
+            </a>
+            <a class="project-link" href="https://rutube.ru/channel/24404224/" target="_blank">
+              <span class="project-icon">✨</span>
+              <div class="project-info">
+                <div class="project-name">"ВолшебствО"</div>
+              </div>
+            </a>
+          </div>
+        </div>
+        
+        <button class="back-btn" id="back-to-start">🔙 НАЗАД</button>
+      </div>
+    </div>
+  </div>
+  <div class="debug" id="debug"></div>
+
+  <script>
+    // ========== ЛОГИКА ЗАСТАВКИ (ИЗ АНТИ ИИ АВТОМОБИЛЬ) ==========
+    const loadingScreen = document.getElementById('loadingScreen');
+    const loadingImage = document.getElementById('loadingImage');
+    const loadingVideo = document.getElementById('loadingVideo');
+    const soundBtn = document.getElementById('soundBtn');
+    let loadingCompleted = false;
+    let loadingStarted = false;
+    let videoPlayed = false;
+    
+    function finishLoadingAndShowStart() {
+      if (loadingCompleted) return;
+      loadingCompleted = true;
+      if (loadingVideo) loadingVideo.pause();
+      loadingScreen.classList.add('hidden');
+      setTimeout(() => {
+        loadingScreen.style.display = 'none';
+      }, 500);
+    }
+    
+    function startLoadingSequence() {
+      if (loadingCompleted || loadingStarted) return;
+      loadingStarted = true;
+      
+      loadingImage.style.display = 'block';
+      loadingVideo.style.display = 'none';
+      
+      setTimeout(() => {
+        if (loadingCompleted) return;
+        loadingImage.style.display = 'none';
+        loadingVideo.style.display = 'block';
+        loadingVideo.muted = false;
+        if (!videoPlayed) {
+          loadingVideo.currentTime = 0;
+          videoPlayed = true;
+        }
+        loadingVideo.play().catch(e => console.log('Video error:', e));
+      }, 2000);
+      
+      setTimeout(() => { finishLoadingAndShowStart(); }, 5000);
+    }
+    
+    soundBtn.addEventListener('click', (e) => { 
+      e.stopPropagation();
+      if (loadingCompleted) return;
+      if (loadingVideo) {
+        loadingVideo.muted = !loadingVideo.muted;
+        soundBtn.textContent = loadingVideo.muted ? '🔇' : '🔊';
+      }
+      setTimeout(() => { if (soundBtn) soundBtn.style.display = 'none'; }, 3000);
+    });
+    
+    setTimeout(() => { 
+      if (!loadingCompleted && !loadingStarted) {
+        startLoadingSequence();
+      }
+    }, 100);
+    // ========== КОНЕЦ ЛОГИКИ ЗАСТАВКИ ==========
+
+    // ЗВУКИ
+    const sounds = { ball: null, square: null, triangle: null, star: null };
+    
+    function preloadSounds() {
+      const btns = document.querySelectorAll('.shape-btn');
+      btns.forEach(btn => {
+        const type = btn.dataset.type;
+        const path = btn.dataset.sound;
+        if (path) {
+          const audio = new Audio(path);
+          audio.preload = 'auto';
+          sounds[type] = audio;
+        }
+      });
+    }
+    
+    function playShapeSound(type) {
+      return new Promise((resolve) => {
+        if (sounds[type]) {
+          const clone = sounds[type].cloneNode();
+          clone.onended = () => resolve();
+          clone.play().catch(e => { resolve(); });
+        } else {
+          resolve();
+        }
+      });
+    }
+    
+    // ВИДЕО
+    const correctVideo = document.getElementById('video-correct');
+    const incorrectVideo = document.getElementById('video-incorrect');
+    
+    function showCorrectVideo() {
+      incorrectVideo.pause();
+      incorrectVideo.currentTime = 0;
+      incorrectVideo.classList.remove('show');
+      correctVideo.currentTime = 0;
+      correctVideo.classList.add('show');
+      correctVideo.play().catch(e => {});
+      setTimeout(() => {
+        correctVideo.classList.remove('show');
+        correctVideo.pause();
+      }, 1500);
+    }
+    
+    function showIncorrectVideo() {
+      correctVideo.pause();
+      correctVideo.currentTime = 0;
+      correctVideo.classList.remove('show');
+      incorrectVideo.currentTime = 0;
+      incorrectVideo.classList.add('show');
+      incorrectVideo.play().catch(e => {});
+      setTimeout(() => {
+        incorrectVideo.classList.remove('show');
+        incorrectVideo.pause();
+      }, 1500);
+    }
+    
+    // ИГРОВАЯ ЛОГИКА
+    let gameState = {
+      level: 1,
+      sequence: [],
+      playerIndex: 0,
+      isShowing: false,
+      isRunning: false,
+      waitingForSound: false,
+      stopRequested: false
+    };
+    
+    const startScreen = document.getElementById('start-screen');
+    const gameScreen = document.getElementById('game-screen');
+    const supportScreen = document.getElementById('support-screen');
+    const levelNum = document.getElementById('level-num');
+    const preview = document.getElementById('preview');
+    const hint = document.getElementById('hint');
+    const buttons = document.querySelectorAll('.shape-btn');
+    
+    function generateSequence() {
+      const shapes = ['ball', 'square', 'triangle', 'star'];
+      gameState.sequence = [];
+      for (let i = 0; i < gameState.level; i++) {
+        gameState.sequence.push(shapes[Math.floor(Math.random() * 4)]);
+      }
+    }
+    
+    async function showSequence() {
+      if (!gameState.isRunning || gameState.stopRequested) return;
+      
+      gameState.isShowing = true;
+      buttons.forEach(b => b.disabled = true);
+      hint.textContent = '👁️ Запомните порядок';
+      
+      for (let type of gameState.sequence) {
+        if (!gameState.isRunning || gameState.stopRequested) return;
+        
+        const btn = Array.from(buttons).find(b => b.dataset.type === type);
+        if (btn) {
+          const cloneSvg = btn.querySelector('svg').cloneNode(true);
+          preview.innerHTML = '';
+          preview.appendChild(cloneSvg);
+          const colors = {ball:'#ff6b6b', square:'#6ecc6e', triangle:'#5cb3ff', star:'#ffe66d'};
+          preview.style.color = colors[type];
+        }
+        preview.classList.add('show');
+        await playShapeSound(type);
+        await new Promise(r => setTimeout(r, 250));
+        preview.classList.remove('show');
+        await new Promise(r => setTimeout(r, 300));
+      }
+      
+      if (!gameState.isRunning || gameState.stopRequested) return;
+      
+      gameState.isShowing = false;
+      if (gameState.isRunning) {
+        hint.textContent = '🖐️ Повторите порядок';
+        buttons.forEach(b => b.disabled = false);
+      }
+    }
+    
+    async function handleTap(type) {
+      if (gameState.isShowing || !gameState.isRunning || gameState.waitingForSound || gameState.stopRequested) return;
+      
+      gameState.waitingForSound = true;
+      buttons.forEach(b => b.disabled = true);
+      
+      await playShapeSound(type);
+      
+      if (!gameState.isRunning || gameState.stopRequested) return;
+      
+      if (type !== gameState.sequence[gameState.playerIndex]) {
+        showIncorrectVideo();
+        
+        setTimeout(() => {
+          if (gameState.isRunning && !gameState.stopRequested) {
+            gameState.playerIndex = 0;
+            gameState.waitingForSound = false;
+            showSequence();
+          }
+        }, 1500);
+        return;
+      }
+      
+      gameState.playerIndex++;
+      gameState.waitingForSound = false;
+      buttons.forEach(b => b.disabled = false);
+      
+      if (gameState.playerIndex === gameState.sequence.length) {
+        buttons.forEach(b => b.disabled = true);
+        gameState.isShowing = true;
+        showCorrectVideo();
+        
+        setTimeout(() => {
+          if (gameState.isRunning && !gameState.stopRequested) {
+            nextLevel();
+          }
+        }, 1500);
+      }
+    }
+    
+    function nextLevel() {
+      if (!gameState.isRunning || gameState.stopRequested) return;
+      
+      gameState.level++;
+      gameState.playerIndex = 0;
+      gameState.isShowing = false;
+      generateSequence();
+      levelNum.textContent = gameState.level;
+      
+      setTimeout(() => {
+        if (gameState.isRunning && !gameState.stopRequested) {
+          showSequence();
+        }
+      }, 400);
+    }
+    
+    // ПЕРЕХОД НА СТРАНИЦУ ПОДДЕРЖКИ
+    function showSupportScreen() {
+      gameState.stopRequested = true;
+      gameState.isRunning = false;
+      gameState.isShowing = false;
+      gameState.waitingForSound = false;
+      
+      correctVideo.pause();
+      correctVideo.currentTime = 0;
+      correctVideo.classList.remove('show');
+      incorrectVideo.pause();
+      incorrectVideo.currentTime = 0;
+      incorrectVideo.classList.remove('show');
+      
+      buttons.forEach(b => b.disabled = true);
+      preview.classList.remove('show');
+      preview.innerHTML = '';
+      
+      gameScreen.classList.remove('show');
+      supportScreen.classList.add('show');
+    }
+    
+    function stopGame() {
+      gameState.stopRequested = true;
+      gameState.isRunning = false;
+      gameState.isShowing = false;
+      gameState.waitingForSound = false;
+      
+      correctVideo.pause();
+      correctVideo.currentTime = 0;
+      correctVideo.classList.remove('show');
+      incorrectVideo.pause();
+      incorrectVideo.currentTime = 0;
+      incorrectVideo.classList.remove('show');
+      
+      buttons.forEach(b => b.disabled = true);
+      preview.classList.remove('show');
+      preview.innerHTML = '';
+      
+      gameScreen.classList.remove('show');
+      supportScreen.classList.add('show');
+      
+      gameState.level = 1;
+      gameState.sequence = [];
+      gameState.playerIndex = 0;
+      
+      setTimeout(() => {
+        gameState.stopRequested = false;
+      }, 500);
+    }
+    
+    // ВОЗВРАТ НА СТАРТОВЫЙ ЭКРАН
+    function backToStart() {
+      supportScreen.classList.remove('show');
+      startScreen.classList.remove('hide');
+      
+      gameState.level = 1;
+      gameState.sequence = [];
+      gameState.playerIndex = 0;
+      gameState.isRunning = false;
+      levelNum.textContent = '1';
+    }
+    
+    function startGame() {
+      gameState.stopRequested = false;
+      gameState.isRunning = true;
+      gameState.isShowing = false;
+      gameState.waitingForSound = false;
+      gameState.level = 1;
+      gameState.playerIndex = 0;
+      
+      generateSequence();
+      levelNum.textContent = gameState.level;
+      
+      startScreen.classList.add('hide');
+      gameScreen.classList.add('show');
+      supportScreen.classList.remove('show');
+      
+      setTimeout(() => {
+        if (gameState.isRunning && !gameState.stopRequested) {
+          showSequence();
+        }
+      }, 200);
+    }
+    
+    // КОПИРОВАНИЕ НОМЕРА
+    function copyPhoneNumber() {
+      const phoneNumber = '8-920-227-56-76';
+      navigator.clipboard.writeText(phoneNumber).then(() => {
+        const copyBtn = document.getElementById('copy-phone');
+        const originalText = copyBtn.textContent;
+        copyBtn.textContent = '✅ Скопировано!';
+        setTimeout(() => {
+          copyBtn.textContent = originalText;
+        }, 2000);
+      });
+    }
+    
+    // ИНИЦИАЛИЗАЦИЯ
+    preloadSounds();
+    document.getElementById('btn-start').addEventListener('click', startGame);
+    document.getElementById('btn-stop').addEventListener('click', stopGame);
+    document.getElementById('back-to-start').addEventListener('click', backToStart);
+    document.getElementById('copy-phone').addEventListener('click', copyPhoneNumber);
+    buttons.forEach(btn => btn.addEventListener('click', () => handleTap(btn.dataset.type)));
+  </script>
+</body>
+</html>
