@@ -1,0 +1,10 @@
+# Для всех поисковых роботов
+User-agent: *
+Allow: /
+
+# Для Яндекса
+User-agent: Yandex
+Allow: /
+
+# Указываем путь к карте сайта
+Sitemap: https://anti-ai-memory.vercel.app/sitemap.xml
